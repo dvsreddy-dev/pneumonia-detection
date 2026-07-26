@@ -21,7 +21,9 @@ SRC    = os.path.join(ROOT, "src")
 ASSETS = os.path.join(SRC, "report_assets")
 OUT    = os.path.join(ROOT, "Pneumonia_Detection_Final_Report.pdf")
 
-APP_URL   = "http://localhost:8501"
+APP_URL   = "https://pneumonia-detection-nf8wnjckue4zbhq6jwwegj.streamlit.app/"
+LOCAL_URL = "http://localhost:8501"
+REPO_URL  = "https://github.com/dvsreddy-dev/pneumonia-detection"
 MODEL_URL = "https://huggingface.co/dvsreddy/pneumonia-detection-model"
 
 # ---------------------------------------------------------------------------
@@ -172,7 +174,8 @@ def build():
         ["Total Patients", "26,684 unique chest X-rays (DICOM format)"],
         ["Framework", "TensorFlow 2.16 / Keras — Apple M1 GPU"],
         ["Best Model", "ResNet50V2 fine-tuned — Test ROC-AUC 0.8546"],
-        ["Web Application", f"Streamlit in Docker — {APP_URL}"],
+        ["Web Application (live)", APP_URL],
+        ["Source Repository", REPO_URL],
         ["Model Registry", MODEL_URL],
         ["Submission Type", "Final Report"],
         ["Date", "July 2026"],
@@ -227,6 +230,42 @@ def build():
         ("LEFTPADDING",  (0, 0), (-1, -1), 6),
     ]))
     story += [rt, PageBreak()]
+
+    # ── Abstract ─────────────────────────────────────────────────────────────
+    story += [rule(), Paragraph("Abstract", h1_style)]
+    story += [
+        para(
+            "Pneumonia is a leading cause of global mortality whose diagnosis depends on chest "
+            "X-ray interpretation by radiologists — a scarce and unevenly distributed resource. "
+            "This project develops an automated deep learning system that classifies chest X-rays "
+            "as pneumonia-positive or negative to serve as a clinical decision-support tool. "
+            "Using the <b>RSNA Pneumonia Detection Challenge</b> dataset (26,684 DICOM images, "
+            "22.5% pneumonia prevalence after patient-level deduplication), we built a "
+            "leakage-safe pipeline with stratified 70/15/15 patient-level splits, per-image "
+            "normalization, and class weighting to address the 3.44:1 imbalance."
+        ),
+        para(
+            "A convolutional neural network trained from scratch established a baseline of "
+            "<b>Test ROC-AUC 0.7853</b>. We then applied transfer learning with two ImageNet "
+            "backbones — <b>ResNet50V2</b> and <b>EfficientNetB0</b> — each evaluated in frozen "
+            "and fine-tuned configurations, with model-specific input scaling embedded in the "
+            "graph and BatchNorm frozen during fine-tuning to prevent catastrophic forgetting. "
+            "The best model, <b>ResNet50V2 fine-tuned</b>, achieved <b>Test ROC-AUC 0.8546</b> "
+            "and <b>PR-AUC 0.6432</b>; at a validation-tuned decision threshold of 0.408 it "
+            "detects <b>81.6% of pneumonia cases</b> while its negative predictions remain 93.2% "
+            "precise — a profile suited to screening and triage."
+        ),
+        para(
+            "The selected model is serialized and published to the Hugging Face Model Hub, and "
+            "served through a <b>Streamlit web application deployed live on Streamlit Community "
+            f"Cloud</b> (<b>{APP_URL}</b>), continuously deployed from GitHub and verified "
+            "end-to-end with live DICOM inference. This report documents the full workflow — data "
+            "understanding, exploratory analysis, preprocessing, baseline modeling, transfer "
+            "learning, model selection, and deployment — with the rationale, observations, and "
+            "conclusions at each stage."
+        ),
+        PageBreak(),
+    ]
 
     # ── 1. Executive Summary ─────────────────────────────────────────────────
     story += section("1", "Executive Summary")
@@ -541,40 +580,45 @@ def build():
     story += [PageBreak()] + section("10", "Model Deployment")
     story += [
         para(
-            f"The application is a <b>Streamlit web app packaged in Docker</b> and deployed "
-            f"locally for testing at <b>{APP_URL}</b>. The trained model is published to the "
-            f"Hugging Face Model Hub — <b>{MODEL_URL}</b> — which serves as the model registry: "
-            f"the app uses its baked-in copy of the model and can fall back to downloading from "
-            f"the Hub."
+            f"The application is <b>live on Streamlit Community Cloud</b> at <b>{APP_URL}</b>, "
+            f"continuously deployed from the public GitHub repository <b>{REPO_URL}</b> — every "
+            f"push to <code>main</code> triggers an automatic rebuild. The trained model (207 MB, "
+            f"beyond GitHub's file limit) is published to the Hugging Face Model Hub — "
+            f"<b>{MODEL_URL}</b> — and downloaded by the app at first run via "
+            f"<code>hf_hub_download</code>; no secrets are required since the model repo is public."
         ),
         para(
-            "<b>Platform note:</b> Hugging Face now requires a PRO subscription to host "
-            "application Spaces (Docker/Gradio return 402 Payment Required on the free tier, and "
-            "the Streamlit SDK has been removed). PRO is not enabled, so <b>local Docker testing "
-            "is the adopted deployment path</b>; a ready-made, PRO-gated Space deployment cell "
-            "remains in the notebook for the future."
+            "<b>Platform note:</b> Hugging Face Spaces was evaluated first but now requires a PRO "
+            "subscription for application hosting (Docker/Gradio return 402 Payment Required on "
+            "the free tier). The adopted architecture — GitHub + Streamlit Community Cloud for "
+            "code, HF Model Hub for the artifact — is fully free and adds continuous deployment. "
+            "A local Docker path is retained for offline testing."
         ),
     ]
     stack = [
         ["Layer", "Technology", "Status"],
+        ["App hosting", "Streamlit Community Cloud (deploys from GitHub)", "Live (public URL)"],
+        ["Source control / CD", "GitHub — push to main triggers redeploy", "Live"],
         ["Model registry", "Hugging Face Model Hub (free, public)", "Live"],
-        ["Application", "Streamlit + TensorFlow (in-process inference)", "Live (local)"],
-        ["Container", "Docker — python:3.12-slim, port 7860 → 8501", "Built & health-checked"],
-        ["Cloud Space (optional)", "HF Docker Space", "Dormant — needs PRO"],
+        ["Local testing", "Docker — python:3.12-slim container", "Built & health-checked"],
     ]
     story += [tbl(stack, [4.0 * cm, 8.0 * cm, CONTENT_W - 12.0 * cm]), Spacer(1, 6)]
     story += [
-        img("app_screenshot.png", width=CONTENT_W * 0.92, base=ASSETS),
-        Paragraph(f"Figure 16 — The deployed Streamlit application at {APP_URL}: upload panel, "
-                  "adjustable decision threshold, and model documentation.", caption_style),
+        img("streamlit_cloud_home.png", width=CONTENT_W * 0.92, base=ASSETS),
+        Paragraph(f"Figure 16 — The live application on Streamlit Community Cloud ({APP_URL}): "
+                  "upload panel, adjustable decision threshold, and model documentation. The "
+                  "sidebar model path (/mount/src/pneumonia-detection/…) confirms the app is "
+                  "running on cloud infrastructure deployed from the GitHub repository.", caption_style),
         img("app_prediction.png", width=CONTENT_W * 0.92, base=ASSETS),
         Paragraph("Figure 17 — Live inference on a pneumonia-positive DICOM: PNEUMONIA at 52.0% "
                   "confidence against the 0.35 screening threshold, with the clinical "
                   "decision-support disclaimer.", caption_style),
-        subsection("10.1", "Reproducible Deployment Commands"),
-        Paragraph("docker build -t pneumonia-detection .", code_style),
-        Paragraph("docker run -d --name pneumonia-app -p 8501:7860 pneumonia-detection", code_style),
+        subsection("10.1", "Continuous Deployment Loop"),
+        Paragraph("git add -A && git commit -m 'update app' && git push   # Streamlit Cloud redeploys automatically", code_style),
         Paragraph(f"open {APP_URL}", code_style),
+        subsection("10.2", "Local Testing (optional)"),
+        Paragraph("docker build -t pneumonia-detection .", code_style),
+        Paragraph(f"docker run -d --name pneumonia-app -p 8501:7860 pneumonia-detection   # {LOCAL_URL}", code_style),
     ]
 
     # ── 11. Key Findings & Business Implications ─────────────────────────────
@@ -615,9 +659,9 @@ def build():
                   "the notebook) should ship in the UI for radiologist trust.", bullet_style),
         Paragraph("• <b>Ensembling untested</b> — ResNet + EfficientNet ensembling is a likely "
                   "+1–2 AUC-point gain.", bullet_style),
-        Paragraph("• <b>Cloud hosting deferred</b> — the HF Space deployment activates with a PRO "
-                  "subscription; alternatives (Streamlit Community Cloud via GitHub) were "
-                  "descoped with the git pipeline.", bullet_style),
+        Paragraph("• <b>Community-tier hosting</b> — Streamlit Community Cloud (~1 GB RAM) apps "
+                  "sleep after inactivity and cold-start in minutes; production use would need "
+                  "dedicated hosting or the smaller 30 MB EfficientNetB0 model.", bullet_style),
         Paragraph("• <b>Regulatory path</b> — clinical deployment requires FDA 510(k) (US) or "
                   "equivalent, with model cards, bias analysis, and failure-mode documentation.", bullet_style),
     ]
@@ -634,9 +678,9 @@ def build():
         Paragraph("• <b>Modeling</b> — scratch CNN baseline (AUC 0.7853) → transfer learning with "
                   "correct fine-tuning hygiene → <b>ResNet50V2 at AUC 0.8546</b> with 81.6% "
                   "pneumonia recall at a validation-tuned threshold.", bullet_style),
-        Paragraph("• <b>Deployment</b> — model published to the Hugging Face Model Hub, served by "
-                  f"a Dockerised Streamlit app at <b>{APP_URL}</b>, verified with live DICOM "
-                  "inference.", bullet_style),
+        Paragraph("• <b>Deployment</b> — model published to the Hugging Face Model Hub; Streamlit "
+                  f"app <b>live on Streamlit Community Cloud at {APP_URL}</b>, continuously "
+                  "deployed from GitHub and verified with live DICOM inference.", bullet_style),
         Spacer(1, 6),
         para(
             "The system meets its design goal: an automated, reproducible decision-support tool "
@@ -651,7 +695,8 @@ def build():
             "<i>Notebook: <code>src/pneumonia_final.ipynb</code> | "
             "Best model: <code>best_final_model.keras</code> | "
             f"Model Hub: <code>{MODEL_URL}</code> | "
-            f"Web app: <code>{APP_URL}</code></i>"
+            f"GitHub: <code>{REPO_URL}</code> | "
+            f"Live app: <code>{APP_URL}</code></i>"
         ),
     ]
 
