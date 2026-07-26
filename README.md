@@ -5,3 +5,8 @@ Deep learning system that classifies chest X-rays as **pneumonia-positive** or *
 **🔗 Live app:** https://pneumonia-detection-nf8wnjckue4zbhq6jwwegj.streamlit.app/
 **🤗 Model:** https://huggingface.co/dvsreddy/pneumonia-detection-model
 
+---
+
+## License
+
+MIT — see model card on the Hugging Face Hub. Dataset is subject to the [RSNA Challenge terms](https://www.kaggle.com/c/rsna-pneumonia-detection-challenge/rules).
