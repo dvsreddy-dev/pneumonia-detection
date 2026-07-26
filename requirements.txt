@@ -1,0 +1,11 @@
+# Streamlit Community Cloud reads this root-level requirements.txt.
+# Cloud runners are Linux x86_64, so tensorflow-cpu is always selected.
+# Versions pinned to the training environment for model compatibility.
+streamlit>=1.35.0
+huggingface_hub>=0.23
+tensorflow-cpu==2.16.2
+numpy>=1.26.0,<2.0.0
+opencv-python-headless==4.9.0.80
+pydicom>=2.4.0
+Pillow>=10.0.0
+scipy<1.14

@@ -1,0 +1,5 @@
+# Keep the build context tiny — only the app, requirements, and the one model file matter
+*
+!app/
+!Dockerfile
+!best_final_model.keras

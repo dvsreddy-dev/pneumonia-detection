@@ -1,0 +1,11 @@
+streamlit>=1.35.0
+huggingface_hub>=0.23
+# tensorflow-cpu has no Linux ARM wheels — pick the right package per platform,
+# pinned to the training version for model compatibility
+tensorflow-cpu==2.16.2; platform_machine == "x86_64" or platform_machine == "AMD64"
+tensorflow==2.16.2; platform_machine == "aarch64" or platform_machine == "arm64"
+numpy>=1.26.0,<2.0.0
+opencv-python-headless==4.9.0.80
+pydicom>=2.4.0
+Pillow>=10.0.0
+scipy<1.14

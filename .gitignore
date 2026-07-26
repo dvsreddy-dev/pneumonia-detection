@@ -1,0 +1,27 @@
+# Credentials — never commit
+.env
+*.env
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
+
+# Large data files
+data/train_images/
+data/*.zip
+*.keras
+*.joblib
+*.npz
+*.h5
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Temp / build
+*.tmp
+dist/
+build/

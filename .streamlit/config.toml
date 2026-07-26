@@ -1,0 +1,7 @@
+# Streamlit Community Cloud configuration
+[server]
+headless = true
+enableCORS = false
+
+[theme]
+base = "light"
